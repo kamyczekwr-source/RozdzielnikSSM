@@ -383,42 +383,42 @@ export function RozdzielnikGrid({
           {/* Interactive Grid Table */}
           <div className="overflow-x-auto overflow-y-auto max-h-[600px] border-b border-gray-100">
             <table className="text-left border-collapse table-fixed select-none" style={{ width: 'max-content', minWidth: '100%' }}>
-              <thead className="bg-slate-50 text-slate-700 text-xs uppercase sticky top-0 z-20">
-                <tr className="border-b border-gray-200 shadow-sm">
+              <thead className="bg-indigo-950 text-indigo-100 text-xs uppercase sticky top-0 z-20">
+                <tr className="shadow-[0_2px_6px_rgba(0,0,0,0.15)]">
                   {/* Pinned Employee Name Column */}
                   <th 
-                    className="sticky left-0 bg-slate-50 z-30 px-4 py-3 border-r border-gray-200 font-bold"
+                    className="sticky left-0 bg-indigo-950 z-30 px-4 py-3 border-r border-indigo-800/60 font-bold text-white tracking-wide"
                     style={{ width: '200px', minWidth: '200px' }}
                   >
                     Nazwisko pracownika
                   </th>
                   <th 
-                    className="px-3 py-3 border-r border-gray-200 text-center font-bold text-indigo-800 bg-indigo-50/50"
+                    className="px-3 py-3 border-r border-indigo-800/60 text-center font-bold text-white bg-indigo-800/70"
                     style={{ width: '70px', minWidth: '70px' }}
                   >
                     Suma
                   </th>
-                  {filteredMaterials.map(mat => (
+                  {filteredMaterials.map((mat, i) => (
                     <th 
                       key={mat.id} 
-                      className="px-0.5 py-2 border-r border-gray-200 text-center font-bold vertical-text-header align-bottom"
+                      className={`px-0.5 py-2 text-center font-bold vertical-text-header align-bottom border-r border-indigo-900/40 ${i % 2 === 0 ? 'bg-indigo-950' : 'bg-indigo-900/60'}`}
                       style={{ width: '42px', minWidth: '42px' }}
                       title={`${mat.name} (${mat.unit}) - Stan w magazynie: ${mat.currentStock}`}
                     >
-                      <div className="writing-mode-vertical leading-none tracking-tight py-1 font-semibold text-[10px] break-all max-h-[110px] overflow-hidden text-ellipsis text-slate-700">
+                      <div className="writing-mode-vertical leading-none tracking-tight py-1 font-semibold text-[10px] break-all max-h-[110px] overflow-hidden text-ellipsis text-indigo-50">
                         {mat.name}
                       </div>
-                      <div className="text-[8px] font-normal text-slate-400 font-mono mt-1 select-none">
+                      <div className="text-[8px] font-normal text-indigo-300 font-mono mt-1 select-none">
                         ({mat.unit})
                       </div>
-                      <div className="text-[8px] font-bold text-indigo-600 mt-0.5" title="Stan magazynu">
+                      <div className="text-[8px] font-bold text-amber-300 mt-0.5" title="Stan magazynu">
                         {mat.currentStock}
                       </div>
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 text-xs">
+              <tbody className="text-xs">
                 {filteredEmployees.length === 0 ? (
                   <tr>
                     <td colSpan={filteredMaterials.length + 2} className="px-6 py-12 text-center text-gray-500">
@@ -426,26 +426,27 @@ export function RozdzielnikGrid({
                     </td>
                   </tr>
                 ) : (
-                  filteredEmployees.map(emp => {
+                  filteredEmployees.map((emp, rowIdx) => {
                     const empDist = activePeriod.distributions[emp.id] || {};
                     const totalItems = employeeTotals[emp.id] || 0;
+                    const rowBase = rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
 
                     return (
-                      <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <tr key={emp.id} className={`${rowBase} hover:bg-amber-50/40 transition-colors group`}>
                         {/* Pinned Employee Name Cell */}
                         <td 
-                          className="sticky left-0 bg-white group-hover:bg-slate-50 z-10 px-4 py-2.5 font-semibold text-slate-900 border-r border-gray-200 flex items-center justify-between"
+                          className={`sticky left-0 ${rowBase} group-hover:bg-amber-50/60 z-10 px-4 py-2.5 font-semibold text-slate-900 border-r border-slate-200 shadow-[2px_0_3px_-2px_rgba(0,0,0,0.06)]`}
                           style={{ width: '200px', minWidth: '200px' }}
                         >
-                          <span className="truncate">{emp.name}</span>
+                          <span className="truncate block">{emp.name}</span>
                         </td>
                         
                         {/* Sum Column */}
                         <td 
-                          className="px-3 py-2.5 border-r border-gray-200 text-center font-bold text-indigo-900 bg-indigo-50/20 text-sm"
+                          className="px-3 py-2.5 border-r border-indigo-100 text-center font-bold text-indigo-900 bg-indigo-50/60 text-sm tabular-nums"
                           style={{ width: '70px', minWidth: '70px' }}
                         >
-                          {totalItems > 0 ? totalItems : <span className="text-gray-300">-</span>}
+                          {totalItems > 0 ? totalItems : <span className="text-slate-300">–</span>}
                         </td>
 
                         {/* Interactive distribution cells */}
@@ -455,7 +456,7 @@ export function RozdzielnikGrid({
                           return (
                             <td 
                               key={mat.id} 
-                              className={`p-0.5 border-r border-gray-200 text-center ${val ? 'bg-amber-50/10' : ''}`}
+                              className="p-[3px] text-center"
                               style={{ width: '42px', minWidth: '42px' }}
                             >
                               <input
@@ -466,12 +467,14 @@ export function RozdzielnikGrid({
                                 value={val}
                                 onChange={(e) => handleCellChange(emp.id, mat.id, e.target.value)}
                                 disabled={activePeriod.isCommitted}
-                                className={`w-full text-center py-1 px-0.5 rounded border-transparent border font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white text-xs ${
-                                  activePeriod.isCommitted 
-                                    ? 'bg-transparent cursor-not-allowed select-none' 
-                                    : 'hover:border-gray-200 cursor-text'
+                                className={`w-full text-center py-1.5 px-0.5 rounded-md font-semibold tabular-nums text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white ${
+                                  activePeriod.isCommitted
+                                    ? 'bg-transparent text-slate-400 cursor-not-allowed select-none'
+                                    : val
+                                      ? 'bg-amber-100/80 text-amber-900 hover:bg-amber-100 cursor-text'
+                                      : 'bg-slate-100/60 text-slate-700 hover:bg-indigo-50 cursor-text'
                                 }`}
-                                placeholder="-"
+                                placeholder="–"
                               />
                             </td>
                           );
@@ -483,28 +486,28 @@ export function RozdzielnikGrid({
 
                 {/* Bottom Total Summary Row */}
                 {filteredEmployees.length > 0 && (
-                  <tr className="bg-slate-100 font-bold text-slate-800 sticky bottom-0 z-20 shadow-[0_-2px_4px_rgba(0,0,0,0.05)]">
+                  <tr className="bg-indigo-900 font-bold text-white sticky bottom-0 z-20 shadow-[0_-3px_8px_rgba(0,0,0,0.15)]">
                     <td 
-                      className="sticky left-0 bg-slate-100 z-10 px-4 py-3 border-r border-gray-200 font-bold"
+                      className="sticky left-0 bg-indigo-900 z-10 px-4 py-3 border-r border-indigo-700/60 font-bold tracking-wide"
                       style={{ width: '200px', minWidth: '200px' }}
                     >
                       SUMA OGÓŁEM
                     </td>
                     <td 
-                      className="px-3 py-3 border-r border-gray-200 text-center text-sm font-black text-indigo-950 bg-indigo-100/50"
+                      className="px-3 py-3 border-r border-indigo-700/60 text-center text-sm font-black text-amber-300 bg-indigo-950/40 tabular-nums"
                       style={{ width: '70px', minWidth: '70px' }}
                     >
                       {(Object.values(employeeTotals) as number[]).reduce((a, b) => a + b, 0)}
                     </td>
-                    {filteredMaterials.map(mat => {
+                    {filteredMaterials.map((mat, i) => {
                       const totalAllocated = materialTotals[mat.id] || 0;
                       return (
                         <td 
                           key={mat.id} 
-                          className="px-1 py-3 border-r border-gray-200 text-center text-xs font-bold"
+                          className={`px-1 py-3 border-r border-indigo-800/40 text-center text-xs font-bold tabular-nums ${i % 2 === 0 ? '' : 'bg-indigo-950/20'}`}
                           style={{ width: '42px', minWidth: '42px' }}
                         >
-                          {totalAllocated > 0 ? totalAllocated : <span className="text-slate-400 font-normal">-</span>}
+                          {totalAllocated > 0 ? totalAllocated : <span className="text-indigo-400 font-normal">–</span>}
                         </td>
                       );
                     })}
