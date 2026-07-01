@@ -1,0 +1,6 @@
+{
+  "name": "Rozdzielnik",
+  "description": "Cyfrowa ewidencja przychodów i rozchodów materiałów oraz miesięczny rozdzielnik dla pracowników.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Wklej te reguły w Firebase Console -> Firestore Database -> Rules.
+// Wymagają zalogowania (choćby anonimowego, co apka robi sama automatycznie),
+// więc dane nie są dostępne dla przypadkowych osób z internetu, ale każdy kto
+// otworzy Twoją apkę (zna adres) może czytać i pisać - to prosty model,
+// wystarczający dla jednego zespołu/magazynu. Jeśli będziesz chciał węższy
+// dostęp (np. tylko Ty), trzeba dodać logowanie e-mail/hasło i sprawdzać UID.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /rozdzielnik/{workspaceId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
