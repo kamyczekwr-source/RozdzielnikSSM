@@ -19,6 +19,7 @@ interface MaterialCardsProps {
   addHistoryEntry: (materialId: string, date: string, docName: string, income: number, expense: number) => void;
   deleteHistoryEntry: (entryId: string) => void;
   addMaterial: (name: string, unit: string, initialStock: number) => string;
+  lowStockThreshold: number;
 }
 
 export function MaterialCards({
@@ -26,7 +27,8 @@ export function MaterialCards({
   history,
   addHistoryEntry,
   deleteHistoryEntry,
-  addMaterial
+  addMaterial,
+  lowStockThreshold
 }: MaterialCardsProps) {
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>(() => {
     return materials.length > 0 ? materials[0].id : '';
@@ -65,10 +67,10 @@ export function MaterialCards({
     return materials.filter(m => {
       const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
-      if (filterLowStock) return m.currentStock <= 5; // e.g. stock warning under or equal to 5 items
+      if (filterLowStock) return m.currentStock <= lowStockThreshold;
       return true;
     });
-  }, [materials, searchQuery, filterLowStock]);
+  }, [materials, searchQuery, filterLowStock, lowStockThreshold]);
 
   // Selected Material
   const activeMaterial = useMemo(() => {
@@ -217,7 +219,7 @@ export function MaterialCards({
             />
             <label htmlFor="checkbox-low-stock" className="text-xs font-semibold text-slate-600 cursor-pointer flex items-center gap-1 select-none">
               <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-              Tylko niski stan (≤ 5 szt.)
+              Tylko niski stan (≤ {lowStockThreshold} szt.)
             </label>
           </div>
         </div>
@@ -231,7 +233,7 @@ export function MaterialCards({
           ) : (
             filteredMaterials.map(m => {
               const isSelected = selectedMaterialId === m.id;
-              const isLow = m.currentStock <= 5;
+              const isLow = m.currentStock <= lowStockThreshold;
               
               return (
                 <button

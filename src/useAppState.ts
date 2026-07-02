@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, ensureSignedIn } from './firebase';
 import { Employee, Material, HistoryEntry, RozdzielnikPeriod } from './types';
@@ -16,8 +16,11 @@ interface DbShape {
   materials: Material[];
   history: HistoryEntry[];
   periods: RozdzielnikPeriod[];
+  lowStockThreshold?: number;
   updatedAt?: number;
 }
+
+const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 
 const LOCAL_CACHE_KEY = 'rozdzielnik_v3_cache';
 
@@ -33,6 +36,7 @@ function loadLocalCache(): DbShape {
     materials: INITIAL_MATERIALS,
     history: INITIAL_HISTORY,
     periods: INITIAL_PERIODS,
+    lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
   };
 }
 
@@ -43,6 +47,17 @@ export function useAppState() {
   const [materials, setMaterials] = useState<Material[]>(initial.materials);
   const [history, setHistory] = useState<HistoryEntry[]>(initial.history);
   const [periods, setPeriods] = useState<RozdzielnikPeriod[]>(initial.periods);
+  const [lowStockThreshold, setLowStockThreshold] = useState<number>(
+    initial.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD
+  );
+
+  // Materiały wyświetlane zawsze w porządku alfabetycznym (A-Z), niezależnie
+  // od kolejności dodawania. Stan wewnętrzny (materials) zostaje w kolejności
+  // wstawiania - to tylko widok do wyświetlania.
+  const sortedMaterials = useMemo(
+    () => [...materials].sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })),
+    [materials]
+  );
 
   const [isSyncing, setIsSyncing] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
@@ -75,6 +90,7 @@ export function useAppState() {
               setMaterials(data.materials ?? []);
               setHistory(data.history ?? []);
               setPeriods(data.periods ?? []);
+              setLowStockThreshold(data.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD);
             } else if (!hasLoadedRemote.current) {
               // Pierwsze uruchomienie - w Firestore jeszcze nic nie ma,
               // więc "zasiewamy" bazę tym, co mamy lokalnie (albo danymi demo).
@@ -106,7 +122,7 @@ export function useAppState() {
 
   // --- Zapis do Firestore (debounced) + zawsze do localStorage jako cache offline ---
   useEffect(() => {
-    const snapshot: DbShape = { employees, materials, history, periods };
+    const snapshot: DbShape = { employees, materials, history, periods, lowStockThreshold };
     localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(snapshot));
 
     if (isRemoteUpdate.current) {
@@ -132,7 +148,7 @@ export function useAppState() {
       if (writeTimeout.current) clearTimeout(writeTimeout.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employees, materials, history, periods]);
+  }, [employees, materials, history, periods, lowStockThreshold]);
 
   // Actions for Employees
   const addEmployee = (name: string) => {
@@ -372,7 +388,8 @@ export function useAppState() {
       employees,
       materials,
       history,
-      periods
+      periods,
+      lowStockThreshold
     };
     const jsonStr = JSON.stringify(dbSnapshot, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -392,6 +409,9 @@ export function useAppState() {
         setMaterials(parsed.materials);
         setHistory(parsed.history);
         setPeriods(parsed.periods);
+        if (typeof parsed.lowStockThreshold === 'number') {
+          setLowStockThreshold(parsed.lowStockThreshold);
+        }
         return true;
       }
       return false;
@@ -406,16 +426,24 @@ export function useAppState() {
     setMaterials(INITIAL_MATERIALS);
     setHistory(INITIAL_HISTORY);
     setPeriods(INITIAL_PERIODS);
+    setLowStockThreshold(DEFAULT_LOW_STOCK_THRESHOLD);
+  };
+
+  const updateLowStockThreshold = (value: number) => {
+    if (isNaN(value) || value < 0) return;
+    setLowStockThreshold(value);
   };
 
   return {
     employees,
-    materials,
+    materials: sortedMaterials,
     history,
     periods,
     isSyncing,
     isOnline,
     syncError,
+    lowStockThreshold,
+    updateLowStockThreshold,
     addEmployee,
     updateEmployee,
     deleteEmployee,

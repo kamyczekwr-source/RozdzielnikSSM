@@ -28,6 +28,8 @@ interface DatabaseSettingsProps {
   exportDatabase: () => void;
   importDatabase: (jsonContent: string) => boolean;
   resetToDemo: () => void;
+  lowStockThreshold: number;
+  updateLowStockThreshold: (value: number) => void;
 }
 
 export function DatabaseSettings({
@@ -41,7 +43,9 @@ export function DatabaseSettings({
   deleteMaterial,
   exportDatabase,
   importDatabase,
-  resetToDemo
+  resetToDemo,
+  lowStockThreshold,
+  updateLowStockThreshold
 }: DatabaseSettingsProps) {
   const [subTab, setSubTab] = useState<'employees' | 'materials' | 'backup'>('employees');
 
@@ -64,6 +68,23 @@ export function DatabaseSettings({
   // Sorting and search states
   const [empSearch, setEmpSearch] = useState('');
   const [matSearch, setMatSearch] = useState('');
+
+  // Low stock threshold editor state
+  const [thresholdInput, setThresholdInput] = useState<string>(String(lowStockThreshold));
+  const [thresholdSaved, setThresholdSaved] = useState(false);
+
+  React.useEffect(() => {
+    setThresholdInput(String(lowStockThreshold));
+  }, [lowStockThreshold]);
+
+  const handleSaveThreshold = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = parseInt(thresholdInput, 10);
+    if (isNaN(value) || value < 0) return;
+    updateLowStockThreshold(value);
+    setThresholdSaved(true);
+    setTimeout(() => setThresholdSaved(false), 1800);
+  };
 
   // Handlers for Employees
   const handleAddEmployeeSubmit = (e: React.FormEvent) => {
@@ -318,6 +339,36 @@ export function DatabaseSettings({
       {/* SUB-TAB 2: MATERIALS */}
       {subTab === 'materials' && (
         <div className="p-6 space-y-6">
+          {/* Low Stock Threshold Settings */}
+          <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm">Próg "niskiego stanu magazynowego"</h3>
+                <p className="text-[11px] text-slate-500 leading-relaxed max-w-md">
+                  Materiał jest oznaczany jako "niski stan" gdy jego ilość spadnie do tej wartości lub poniżej. Dotyczy to kafelka na stronie głównej oraz filtra w Kartach Magazynowych.
+                </p>
+              </div>
+            </div>
+            <form onSubmit={handleSaveThreshold} className="flex items-center gap-2 shrink-0">
+              <input
+                id="input-low-stock-threshold"
+                type="number"
+                min="0"
+                value={thresholdInput}
+                onChange={(e) => setThresholdInput(e.target.value)}
+                className="w-20 text-sm text-center font-bold rounded-lg border border-gray-200 p-2 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                type="submit"
+                id="btn-save-low-stock-threshold"
+                className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg cursor-pointer transition-colors shrink-0"
+              >
+                {thresholdSaved ? 'Zapisano ✓' : 'Zapisz'}
+              </button>
+            </form>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             
             {/* Add Material Form */}
