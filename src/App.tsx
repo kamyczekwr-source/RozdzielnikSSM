@@ -52,6 +52,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'rozdzielnik' | 'kartoteki' | 'zarzadzanie'>('rozdzielnik');
   const [printPeriodId, setPrintPeriodId] = useState<string | null>(null);
+  const [pendingLowStockFilter, setPendingLowStockFilter] = useState(false);
 
   // Quick stats calculations for the top panel
   const totalMaterials = materials.length;
@@ -189,7 +190,16 @@ export default function App() {
         </div>
 
         {/* KPI 3 */}
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs flex items-center gap-3">
+        <button
+          type="button"
+          id="kpi-low-stock-card"
+          onClick={() => {
+            setActiveTab('kartoteki');
+            setPendingLowStockFilter(true);
+          }}
+          title="Kliknij, aby zobaczyć listę materiałów z niskim stanem"
+          className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs flex items-center gap-3 text-left cursor-pointer transition-all hover:shadow-md hover:border-amber-200 hover:-translate-y-0.5 active:translate-y-0"
+        >
           <div className={`p-2.5 rounded-lg ${lowStockCount > 0 ? 'bg-amber-50 text-amber-600 animate-pulse' : 'bg-slate-50 text-slate-500'}`}>
             <TrendingUp className="w-5 h-5" />
           </div>
@@ -197,7 +207,7 @@ export default function App() {
             <div className="text-[10px] font-bold text-slate-500 uppercase">Niski stan zapasów</div>
             <div className={`text-lg font-black ${lowStockCount > 0 ? 'text-amber-600' : 'text-slate-800'}`}>{lowStockCount} <span className="text-xs font-semibold text-slate-400">materiałów</span></div>
           </div>
-        </div>
+        </button>
 
         {/* KPI 4 */}
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs flex items-center gap-3">
@@ -237,6 +247,8 @@ export default function App() {
             deleteHistoryEntry={deleteHistoryEntry}
             addMaterial={addMaterial}
             lowStockThreshold={lowStockThreshold}
+            initialFilterLowStock={pendingLowStockFilter}
+            onFilterConsumed={() => setPendingLowStockFilter(false)}
           />
         )}
 

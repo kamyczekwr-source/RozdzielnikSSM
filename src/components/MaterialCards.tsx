@@ -20,6 +20,8 @@ interface MaterialCardsProps {
   deleteHistoryEntry: (entryId: string) => void;
   addMaterial: (name: string, unit: string, initialStock: number) => string;
   lowStockThreshold: number;
+  initialFilterLowStock?: boolean;
+  onFilterConsumed?: () => void;
 }
 
 export function MaterialCards({
@@ -28,14 +30,27 @@ export function MaterialCards({
   addHistoryEntry,
   deleteHistoryEntry,
   addMaterial,
-  lowStockThreshold
+  lowStockThreshold,
+  initialFilterLowStock,
+  onFilterConsumed
 }: MaterialCardsProps) {
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>(() => {
     return materials.length > 0 ? materials[0].id : '';
   });
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterLowStock, setFilterLowStock] = useState(false);
+  const [filterLowStock, setFilterLowStock] = useState(initialFilterLowStock ?? false);
+
+  // Jeśli wejście na tę zakładkę nastąpiło przez kliknięcie kafelka "Niski stan
+  // zapasów" na stronie głównej, filtr włącza się automatycznie - raz, przy
+  // pierwszym renderze. Informujemy rodzica, że sygnał został zużyty, żeby
+  // przy zwykłej nawigacji zakładką filtr nie włączał się sam.
+  React.useEffect(() => {
+    if (initialFilterLowStock) {
+      onFilterConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Modal State for creating a new material
   const [showNewMaterialModal, setShowNewMaterialModal] = useState(false);
