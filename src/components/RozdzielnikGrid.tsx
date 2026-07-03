@@ -13,8 +13,10 @@ import {
   PlusCircle, 
   Info,
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  Camera
 } from 'lucide-react';
+import { PhotoImportModal } from './PhotoImportModal';
 
 interface RozdzielnikGridProps {
   employees: Employee[];
@@ -66,6 +68,10 @@ export function RozdzielnikGrid({
   const [materialSearch, setMaterialSearch] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [showOnlyUsed, setShowOnlyUsed] = useState(false);
+
+  // Photo import modal
+  const [showPhotoImport, setShowPhotoImport] = useState(false);
+  const [importSummary, setImportSummary] = useState<string | null>(null);
 
   // Active period details
   const activePeriod = useMemo(() => {
@@ -161,6 +167,16 @@ export function RozdzielnikGrid({
     setNewMatBO(0);
     setNewMatUnit('szt.');
     setShowNewMaterialModal(false);
+  };
+
+  const handleApplyPhotoImport = (importedRows: { employeeId: string; materialId: string; quantity: number }[]) => {
+    if (!activePeriod) return;
+    importedRows.forEach((row) => {
+      updateDistribution(activePeriod.id, row.employeeId, row.materialId, row.quantity);
+    });
+    setShowPhotoImport(false);
+    setImportSummary(`Zaimportowano ${importedRows.length} ${importedRows.length === 1 ? 'pozycję' : 'pozycji'} ze zdjęcia.`);
+    setTimeout(() => setImportSummary(null), 5000);
   };
 
   // Export to CSV helper
@@ -261,6 +277,18 @@ export function RozdzielnikGrid({
               <Printer className="w-4 h-4" />
               Drukuj
             </button>
+
+            {!activePeriod.isCommitted && (
+              <button
+                id="btn-photo-import"
+                onClick={() => setShowPhotoImport(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 bg-indigo-50 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                title="Zrób zdjęcie papierowego rozdzielnika i zaimportuj wartości automatycznie"
+              >
+                <Camera className="w-4 h-4" />
+                Ze zdjęcia
+              </button>
+            )}
 
             <button
               id="btn-csv-export"
@@ -709,6 +737,25 @@ export function RozdzielnikGrid({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Photo Import Success Banner */}
+      {importSummary && (
+        <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold z-50 flex items-center gap-2 animate-[fadeIn_0.2s_ease-out]">
+          <CheckCircle2 className="w-4 h-4" />
+          {importSummary}
+        </div>
+      )}
+
+      {/* Photo Import Modal */}
+      {showPhotoImport && activePeriod && (
+        <PhotoImportModal
+          employees={employees}
+          materials={materials}
+          existingDistributions={activePeriod.distributions}
+          onApply={handleApplyPhotoImport}
+          onClose={() => setShowPhotoImport(false)}
+        />
       )}
 
       {/* Style injector for vertical rotated headers */}
